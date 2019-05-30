@@ -9,19 +9,18 @@ import Part
 #from FreeCAD import Base
 #from pivy import coin
 import DraftVecUtils
+SIDES = 12
+RINGS = 3
+WIDTH = 300
 
-def sphere():
-    """ Function to make the fases
+def sphere(sides, rings, width):
+    """ Function to make the faces of a sphere which has to be cut to make Streptohedron
     """
-    sides = 12        # sides per ring
-    rings = 3         # Nof ring on the torus
-    width = 250       # approximately final diameter in mm
-    height = width
     App.Console.PrintMessage("\nDraw streptohedron based on " + str(sides) + " Sides, " \
                              + str(sides*(rings - 1) * 2) + " Faces \n")
     total_length = 0
     ring_loc = []
-    v_cross_base = FreeCAD.Vector(height / 2, 0, 0)
+    v_cross_base = FreeCAD.Vector(width / 2, 0, 0)
 
     cor_factor = 1 / math.cos(2 * math.pi / (sides * 2))
     stri = "cor factor = {:2.2f} \n".format(cor_factor)
@@ -50,33 +49,33 @@ def sphere():
     for ring in range(rings):
         if ring == 0:
             for cnt in range(sides):
-                vec_0 = vector[ring][cnt]
-                vec_1 = vector[ring + 1][(cnt) % sides]
-                vec_2 = vector[(ring + 1)][(cnt + 1) % sides]
-                faces.append(make_face(vec_0, vec_1, vec_2))
+                vertex_0 = vector[ring][cnt]
+                vertex_1 = vector[ring + 1][(cnt) % sides]
+                vertex_2 = vector[(ring + 1)][(cnt + 1) % sides]
+                faces.append(make_face(vertex_0, vertex_1, vertex_2))
         elif ring == (rings - 1):
             for cnt in range(sides):
-                vec_0 = vector[ring][cnt]
-                vec_1 = vector[ring][(cnt + 1) % sides]
-                vec_2 = vector[(ring + 1)][cnt]
-                faces.append(make_face(vec_0, vec_1, vec_2))
+                vertex_0 = vector[ring][cnt]
+                vertex_1 = vector[ring][(cnt + 1) % sides]
+                vertex_2 = vector[(ring + 1)][cnt]
+                faces.append(make_face(vertex_0, vertex_1, vertex_2))
         else:
             for cnt in range(sides):
-                vec_0 = vector[ring][cnt]
+                vertex_0 = vector[ring][cnt]
                 # % sides --> Start at 0 when round
-                vec_1 = vector[ring][(cnt + 1) % sides]
+                vertex_1 = vector[ring][(cnt + 1) % sides]
                 # % 2 --> when odd ring use next vertex on next ring
-                vec_2 = vector[(ring + 1) % rings][(cnt + 1 - (ring % 2)) % sides]
+                vertex_2 = vector[(ring + 1) % rings][(cnt + 1 - (ring % 2)) % sides]
                 # Up facing Triangle
-                faces.append(make_face(vec_0, vec_1, vec_2))
+                faces.append(make_face(vertex_0, vertex_1, vertex_2))
                 # % rings --> start at 0 when round
-                vec_0 = vector[(ring + 1) % rings][cnt]
+                vertex_0 = vector[(ring + 1) % rings][cnt]
                 # % sides --> Start at 0 when round
-                vec_1 = vector[(ring + 1) % rings][(cnt + 1) % sides]
+                vertex_1 = vector[(ring + 1) % rings][(cnt + 1) % sides]
                 # when even ring use next vertex on previous ring
-                vec_2 = vector[ring][(cnt + (ring % 2)) % sides]
+                vertex_2 = vector[ring][(cnt + (ring % 2)) % sides]
                 # Down facing Triangle
-                faces.append(make_face(vec_0, vec_1, vec_2))
+                faces.append(make_face(vertex_0, vertex_1, vertex_2))
         edge_lengths = []
         for edge_cnt in range(3):
             edge_lengths.append(round(faces[-1].Edges[edge_cnt].Length, 1))
@@ -119,20 +118,20 @@ def sphere():
     solid = Part.makeSolid(shell)
     return solid
 
-def make_face(vec_1, vec_2, vec_3):
+def make_face(vertex_1, vertex_2, vertex_3):
     """
-    Function to make the fases
+    Function to make the faces
     """
-    wire = Part.makePolygon([vec_1, vec_2, vec_3, vec_1])
+    wire = Part.makePolygon([vertex_1, vertex_2, vertex_3, vertex_1])
     face = Part.Face(wire)
     return face
 
-def make_sphere():
+def make_sphere(sides, rings, width):
     """
     Function to make sphere in FreeCAD
     """
     FreeCAD.newDocument()
-    generated_sphere = sphere()
+    generated_sphere = sphere(sides, rings, width)
     Part.show(generated_sphere)
 
-make_sphere()
+make_sphere(SIDES, RINGS, WIDTH)
